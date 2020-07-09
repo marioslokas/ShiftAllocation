@@ -15,8 +15,10 @@ namespace Allocation
         CantDoEightDay
     }
     
-    
-    public class Person
+    /// <summary>
+    /// Class for representing participants
+    /// </summary>
+    public class Participant
     {
         public string name;
         public static int numberOfShifts = 3;
@@ -30,7 +32,7 @@ namespace Allocation
 
         private DayConstrains[] personConstrains;
         
-        public Person(string name, DayConstrains[] constrains = null)
+        public Participant(string name, DayConstrains[] constrains = null)
         {
             if (constrains == null)
             {

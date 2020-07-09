@@ -6,13 +6,15 @@ using UnityEngine;
 
 namespace Allocation
 {
+    /// <summary>
+    /// Represents one day with shifts
+    /// </summary>
     public class Day
     {
         private int dayNumber;
 
         public int DayNumber => dayNumber;
 
-        private Shift breakfastShift;
         private Shift dinnerShift;
 
         private const int breakfastNoOfWorkers = 2;
@@ -21,8 +23,6 @@ namespace Allocation
         public Day(int dayNumber, bool shouldHaveBreakfast, bool shouldHaveDinner)
         {
             this.dayNumber = dayNumber;
-            breakfastShift = shouldHaveBreakfast ? new Shift(breakfastNoOfWorkers, false) : 
-                new Shift(breakfastNoOfWorkers, true);
             dinnerShift = shouldHaveDinner ? new Shift(dinnerNoOfWorkers, false) : 
                 new Shift(dinnerNoOfWorkers, true);
         }
@@ -38,18 +38,8 @@ namespace Allocation
         // picks random not filled shift and assigns
         public Shift GetAvailableShift()
         {
-            if (breakfastShift.IsShiftAvailable()) return breakfastShift;
-            else if (dinnerShift.IsShiftAvailable() ) return dinnerShift;
-
+            if (dinnerShift.IsShiftAvailable() ) return dinnerShift;
             return null;
-        }
-
-        public void LogAssignments()
-        {
-//            Debug.Log("Breakfast shift on Day " + dayNumber + " is: ");
-//            breakfastShift.LogAssignments();
-            Debug.Log("Dinner shift on Day " +dayNumber + " is: ");
-            dinnerShift.LogAssignments(dayNumber);
         }
         
         public string GetAssignmentsString()
@@ -61,22 +51,23 @@ namespace Allocation
         }
         
         
-        
+        /// <summary>
+        /// Class for holding shift info and reference to people assigned
+        /// </summary>
         public class Shift
         {
             private bool notAvailableShift;
-            
             private int numberOfSpots;
             private int spotsIndex;
 
-            private Person[] assignedPersons;
+            private Participant[] _assignedParticipants;
         
             public Shift(int numberOfSpots, bool notAvailableShift)
             {
                 this.notAvailableShift = notAvailableShift;
                 
                 this.numberOfSpots = numberOfSpots;
-                assignedPersons = new Person[numberOfSpots];
+                _assignedParticipants = new Participant[numberOfSpots];
             }
 
             public bool IsShiftAvailable()
@@ -92,24 +83,22 @@ namespace Allocation
                 return true;
             }
 
-            public bool Assign(Person thisPerson, int dayNumber)
+            public void Assign(Participant thisParticipant, int dayNumber)
             {
                 if (!IsShiftAvailable())
                 {
                     Debug.Log("Spots filled for this day");
-                    return false;
+                    return;
                 }
 
-                assignedPersons[spotsIndex] = thisPerson;
-                thisPerson.ShiftsTaken++;
+                _assignedParticipants[spotsIndex] = thisParticipant;
+                thisParticipant.ShiftsTaken++;
                 spotsIndex++;
-
-                return true;
             }
 
-            public bool PersonIsAssignedToShift(Person thisPerson)
+            public bool PersonIsAssignedToShift(Participant thisParticipant)
             {
-                if (assignedPersons.Contains(thisPerson))
+                if (_assignedParticipants.Contains(thisParticipant))
                 {
                     return true;
                 }
@@ -121,7 +110,7 @@ namespace Allocation
             {
                 for (int i = 0; i < numberOfSpots; i++)
                 {
-                    Debug.Log("Day Number : " + dayNumber + " " + assignedPersons[i].name);
+                    Debug.Log("Day Number : " + dayNumber + " " + _assignedParticipants[i].name);
                 }
             }
 
@@ -130,7 +119,7 @@ namespace Allocation
                 string assignmentsString = String.Empty;
                 for (int i = 0; i < numberOfSpots; i++)
                 {
-                    assignmentsString += assignedPersons[i].name + "\n";
+                    assignmentsString += _assignedParticipants[i].name + "\n";
                 }
 
                 return assignmentsString;

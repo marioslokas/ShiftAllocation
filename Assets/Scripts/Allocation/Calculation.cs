@@ -20,6 +20,7 @@ namespace Allocation
     
     public class Calculation : MonoBehaviour
     {
+        [Header("Parameters for calculation")]
         [SerializeField] private int numberOfDays;
         [SerializeField] private int numberOfPeoplePerShift;
         [SerializeField] private int personMaxShifts;
@@ -27,11 +28,12 @@ namespace Allocation
         [SerializeField] private TMP_InputField[] namesInputFields;
         [SerializeField] private Text[] daysResults;
 
-        [SerializeField] private DayConstrains[] josefinasCantDoDays;
+        [SerializeField] private string personWhoCantDoAllDays;
+        [SerializeField] private DayConstrains[] cantDoDays;
         
-        private Person[] participants;
-        private Person[] participantsWithConstrains; // do those first
-        private Person[] normalParticipants;
+        private Participant[] participants;
+        private Participant[] participantsWithConstrains; // do those first
+        private Participant[] normalParticipants;
         
         private int numberOfParticipants; // namesInputFields size of array
         private Day[] days;
@@ -43,7 +45,7 @@ namespace Allocation
         private void Awake()
         {
             Day.dinnerNoOfWorkers = numberOfPeoplePerShift;
-            Person.numberOfShifts = personMaxShifts;
+            Participant.numberOfShifts = personMaxShifts;
         }
     
 
@@ -58,7 +60,7 @@ namespace Allocation
             
             numberOfParticipants = namesInputFields.Length;
             
-            participants = new Person[numberOfParticipants];
+            participants = new Participant[numberOfParticipants];
             days = new Day[numberOfDays];
             
             for (int j = 0; j < numberOfDays; j++)
@@ -72,8 +74,7 @@ namespace Allocation
             if (checkPeople)
             {
                 return (
-                    normalParticipants.Any(x => !x.IsDone()) && participantsWithConstrains.Any(x=> !x.IsDone())
-                    );
+                    normalParticipants.Any(x => !x.IsDone()) && participantsWithConstrains.Any(x=> !x.IsDone()));
             }
             else
             {
@@ -88,13 +89,14 @@ namespace Allocation
             for (int i = 0; i < numberOfParticipants; i++)
             {
                 string name = namesInputFields[i].text;
-                if (name.Equals("Josefina"))
+                
+                if (name.Equals(personWhoCantDoAllDays))
                 {
-                    participants[i] = new Person(name, josefinasCantDoDays); 
+                    participants[i] = new Participant(name, cantDoDays); 
                 }
                 else
                 {
-                    participants[i] = new Person(name);
+                    participants[i] = new Participant(name);
                 }
                 
             }
@@ -119,11 +121,11 @@ namespace Allocation
             normalParticipants = participants.Where(x => !x.HasConstrains()).ToArray();
 
             int contraintsCounter = 0;
-            Person[] constrainedParticipantsNotDone = 
+            Participant[] constrainedParticipantsNotDone = 
                 participantsWithConstrains.Where(x => !x.IsDone()).Shuffle().ToArray();
 
             int normalCounter = 0;
-            Person[] participantsNotDone = normalParticipants.Where(x => !x.IsDone()).Shuffle().ToArray();
+            Participant[] participantsNotDone = normalParticipants.Where(x => !x.IsDone()).Shuffle().ToArray();
 
             while (CheckEndCondition())
             {
@@ -136,7 +138,7 @@ namespace Allocation
                     break;
                 }
 
-                Person participant;
+                Participant participant;
                 
                 if (participantsWithConstrains.Any(x=> !x.IsDone()) )
                 {
@@ -180,20 +182,12 @@ namespace Allocation
                 // skip participant if the only days left are ones he signed up for
                 if (notFilleDaysParticipantCanDoAndNotAlreadySignedUpFor.Count == 0) continue;
 
-                try
-                {
-                    int r = Random.Range(0, notFilleDaysParticipantCanDoAndNotAlreadySignedUpFor.Count);
-                    notFilledDay = notFilleDaysParticipantCanDoAndNotAlreadySignedUpFor[r];
-                    
-                    Day.Shift availableShift = notFilledDay.GetAvailableShift();
-                    availableShift.Assign(participant, notFilledDay.DayNumber);
+                int r = Random.Range(0, notFilleDaysParticipantCanDoAndNotAlreadySignedUpFor.Count);
+                notFilledDay = notFilleDaysParticipantCanDoAndNotAlreadySignedUpFor[r];
+                
+                Day.Shift availableShift = notFilledDay.GetAvailableShift();
+                availableShift.Assign(participant, notFilledDay.DayNumber);
 
-                }
-                catch (ArgumentOutOfRangeException e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
             }
             
             // print the ones who don't do more than 2 shifts
@@ -209,7 +203,7 @@ namespace Allocation
             
             Debug.Log("Participants who do 3 shifts: ");
 
-            Person[] participantsDone = participants.Where(x => x.IsDone()).ToArray();
+            Participant[] participantsDone = participants.Where(x => x.IsDone()).ToArray();
             
             for (int i = 0; i < participantsDone.Length; i++)
             {
